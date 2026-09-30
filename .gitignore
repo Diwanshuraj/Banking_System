@@ -1,0 +1,15 @@
+# Build output
+backend/target/
+frontend/dist/
+
+# Dependencies
+frontend/node_modules/
+
+# Local env / editor
+.env
+*.local
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log
+.DS_Store

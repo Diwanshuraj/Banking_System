@@ -1,55 +1,86 @@
 package com.banking.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * One ledger entry on one account (a passbook line). A transfer between two accounts of this bank
+ * produces two entries, a DEBIT and a CREDIT, sharing the same reference ID.
+ */
 @Entity
-@Table(name = "transactions")
+@Table(name = "transactions", indexes = {
+        @Index(name = "idx_txn_account_created", columnList = "account_id, created_at"),
+        @Index(name = "idx_txn_reference", columnList = "reference_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Transaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "reference_id", nullable = false, length = 40)
     private String referenceId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_account_id")
-    private Account senderAccount;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receiver_account_id")
-    private Account receiverAccount;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private Direction direction;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Channel channel;
+
+    @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TransactionType transactionType;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal balanceAfter;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TransactionStatus status = TransactionStatus.COMPLETED;
+    @Column(length = 100)
+    private String counterpartyName;
 
+    @Column(length = 60)
+    private String counterpartyAccount;
+
+    @Column(nullable = false, length = 255)
     private String description;
 
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private TxnStatus status = TxnStatus.SUCCESS;
 
-    public enum TransactionType {
-        TRANSFER, DEPOSIT, WITHDRAWAL, BILL_PAYMENT, INTEREST
+    /** Transfers between the customer's own accounts don't count towards daily limits. */
+    @Column(nullable = false)
+    private boolean selfTransfer = false;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
     }
 
-    public enum TransactionStatus {
-        COMPLETED, PENDING, FAILED, REJECTED
+    public enum Direction {
+        CREDIT, DEBIT
+    }
+
+    public enum Channel {
+        UPI, IMPS, NEFT, RTGS, INTERNAL, BILL_PAYMENT, FIXED_DEPOSIT, LOAN, INTEREST, CASH
+    }
+
+    public enum TxnStatus {
+        SUCCESS, PENDING, FAILED
     }
 }
