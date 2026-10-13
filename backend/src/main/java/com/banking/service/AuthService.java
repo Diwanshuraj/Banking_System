@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Optional;
 
+/** Login with lockout, online sign-up, profile and password changes, and the transaction PIN. */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -28,6 +29,7 @@ public class AuthService {
     private final SettingsService settings;
     private final DtoMapper mapper;
 
+    /** Loads a user by id. */
     public User loadUser(Long id) {
         return userRepository.findById(id).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Please log in again."));
     }
@@ -74,6 +76,7 @@ public class AuthService {
         return new AuthResponse(jwtService.issue(user), mapper.user(user));
     }
 
+    /** Creates a customer from the sign-up form, opens their first account and signs them in. */
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         User user = onboarding.createCustomer(new OnboardingService.NewCustomer(
@@ -84,11 +87,13 @@ public class AuthService {
         return new AuthResponse(jwtService.issue(user), mapper.user(user));
     }
 
+    /** The signed-in user's profile. */
     @Transactional(readOnly = true)
     public UserDto me(Long userId) {
         return mapper.user(loadUser(userId));
     }
 
+    /** Updates the phone number and address. */
     @Transactional
     public UserDto updateProfile(Long userId, ProfileUpdateRequest request) {
         User user = loadUser(userId);
@@ -99,6 +104,7 @@ public class AuthService {
         return mapper.user(user);
     }
 
+    /** Changes the password after checking the current one. */
     @Transactional
     public void changePassword(Long userId, ChangePasswordRequest request) {
         User user = loadUser(userId);
@@ -113,6 +119,7 @@ public class AuthService {
                 "Your internet banking password was changed. If this wasn't you, contact us immediately.");
     }
 
+    /** Sets or changes the 6-digit transaction PIN after checking the login password. */
     @Transactional
     public void setPin(Long userId, SetPinRequest request) {
         User user = loadUser(userId);

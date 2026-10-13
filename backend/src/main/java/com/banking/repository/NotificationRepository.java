@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
+/** Spring Data JPA repository for {@link com.banking.model.Notification}. */
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
     List<Notification> findTop100ByUserIdOrderByCreatedAtDescIdDesc(Long userId);

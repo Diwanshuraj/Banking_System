@@ -21,6 +21,7 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+/** Accounts, passbook search, CSV statements and the customer dashboard. */
 @Service
 @RequiredArgsConstructor
 public class AccountService {
@@ -42,16 +43,19 @@ public class AccountService {
         return account;
     }
 
+    /** The customer's accounts. */
     @Transactional(readOnly = true)
     public List<AccountDto> list(Long userId) {
         return accountRepository.findByUserIdOrderByOpenedAtAsc(userId).stream().map(mapper::account).toList();
     }
 
+    /** One of the customer's accounts. */
     @Transactional(readOnly = true)
     public AccountDto get(Long userId, Long accountId) {
         return mapper.account(ownedAccount(userId, accountId));
     }
 
+    /** Opens an additional account for the customer. */
     @Transactional
     public AccountDto open(Long userId, OpenAccountRequest request) {
         User user = authService.loadUser(userId);
@@ -63,6 +67,7 @@ public class AccountService {
 
     // ---------- Transactions ----------
 
+    /** One page of the customer's transactions, narrowed by the filter. */
     @Transactional(readOnly = true)
     public PageResponse<TransactionDto> search(Long userId, TransactionFilter filter, int page, int size) {
         Collection<Long> accountIds;
@@ -109,6 +114,7 @@ public class AccountService {
         };
     }
 
+    /** A CSV statement for one account between two dates. */
     @Transactional(readOnly = true)
     public String statementCsv(Long userId, Long accountId, LocalDate from, LocalDate to) {
         Account account = ownedAccount(userId, accountId);
@@ -146,6 +152,7 @@ public class AccountService {
 
     // ---------- Dashboard ----------
 
+    /** Everything the dashboard shows: balances, recent activity, monthly money flow, deposits, loans and today's limit usage. */
     @Transactional(readOnly = true)
     public DashboardDto dashboard(Long userId) {
         List<Account> accounts = accountRepository.findByUserIdOrderByOpenedAtAsc(userId);

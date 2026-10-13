@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
+/** Spring Data JPA repository for {@link com.banking.model.Transaction}. */
 public interface TransactionRepository extends JpaRepository<Transaction, Long>, JpaSpecificationExecutor<Transaction> {
 
     /** Money a customer has sent to other people since {@code since}, for daily limits. */

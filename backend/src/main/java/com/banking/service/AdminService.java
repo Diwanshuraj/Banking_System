@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.*;
 
+/** Branch-admin operations: bank-wide metrics, customer and account management, branch cash and interest credit. */
 @Service
 @RequiredArgsConstructor
 public class AdminService {
@@ -32,6 +33,7 @@ public class AdminService {
     private final IdGenerator ids;
     private final DtoMapper mapper;
 
+    /** Bank-wide KPIs, channel breakdown and daily volume for the admin overview. */
     @Transactional(readOnly = true)
     public AdminMetrics metrics() {
         LocalDate today = LocalDate.now();
@@ -75,12 +77,14 @@ public class AdminService {
 
     // ---------- Customers ----------
 
+    /** Users matching the search text, or all users (newest first) when it is blank. */
     @Transactional(readOnly = true)
     public List<UserDto> users(String q) {
         List<User> users = q == null || q.isBlank() ? userRepository.findAllByOrderByCreatedAtDesc() : userRepository.search(q.trim());
         return users.stream().map(mapper::user).toList();
     }
 
+    /** One user together with their accounts. */
     @Transactional(readOnly = true)
     public AdminUserDetail user(Long id) {
         User user = userRepository.findById(id).orElseThrow(() -> ApiException.notFound("Customer not found"));
@@ -92,6 +96,7 @@ public class AdminService {
         return new AdminUserDetail(mapper.user(user), accounts);
     }
 
+    /** Onboards a customer at the branch, opens their first account and credits any opening cash deposit. */
     @Transactional
     public AdminUserDetail createCustomer(AdminCreateCustomerRequest request) {
         User user = onboarding.createCustomer(new OnboardingService.NewCustomer(
@@ -105,6 +110,7 @@ public class AdminService {
         return detail(user);
     }
 
+    /** Suspends, reactivates or unlocks a user. */
     @Transactional
     public UserDto setUserStatus(Long adminId, Long userId, User.UserStatus status) {
         User user = userRepository.findById(userId).orElseThrow(() -> ApiException.notFound("Customer not found"));
@@ -123,12 +129,14 @@ public class AdminService {
 
     // ---------- Accounts ----------
 
+    /** Accounts matching the search text, with their owners. */
     @Transactional(readOnly = true)
     public List<AccountDto> accounts(String q) {
         List<Account> accounts = q == null || q.isBlank() ? accountRepository.findAllWithUser() : accountRepository.searchWithUser(q.trim());
         return accounts.stream().map(mapper::account).toList();
     }
 
+    /** Freezes or unfreezes an account. */
     @Transactional
     public AccountDto setAccountStatus(Long accountId, Account.AccountStatus status) {
         if (status == Account.AccountStatus.CLOSED) throw ApiException.badRequest("Close accounts through a closure service request.");
@@ -144,6 +152,7 @@ public class AdminService {
         return mapper.account(account);
     }
 
+    /** Posts a branch cash deposit or withdrawal. */
     @Transactional
     public TransactionDto cash(Long accountId, CashRequest request) {
         Account account = ledger.lockOne(accountId);

@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
 
+/** Issues and verifies the signed JWTs that authenticate REST API calls. */
 @Service
 public class JwtService {
 
@@ -27,6 +28,7 @@ public class JwtService {
         this.lifetime = Duration.ofMinutes(expirationMinutes);
     }
 
+    /** Signs a token that identifies the user. */
     public String issue(User user) {
         Instant now = Instant.now();
         return Jwts.builder()

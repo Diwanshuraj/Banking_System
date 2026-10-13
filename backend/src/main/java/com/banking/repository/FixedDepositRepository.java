@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/** Spring Data JPA repository for {@link com.banking.model.FixedDeposit}. */
 public interface FixedDepositRepository extends JpaRepository<FixedDeposit, Long> {
 
     List<FixedDeposit> findByUserIdOrderByStartDateDesc(Long userId);

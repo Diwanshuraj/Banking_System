@@ -8,6 +8,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/** A customer or admin login, with KYC details and access status. */
 @Entity
 @Table(name = "users")
 @Getter

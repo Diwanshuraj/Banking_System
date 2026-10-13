@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/** A loan application and, once approved, the running loan with its EMI schedule. */
 @Entity
 @Table(name = "loans")
 @Getter

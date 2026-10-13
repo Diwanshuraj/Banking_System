@@ -8,6 +8,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/** A saved payee that the customer can send money to, with an optional per-transfer limit. */
 @Entity
 @Table(name = "beneficiaries", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "account_number"}))
 @Getter

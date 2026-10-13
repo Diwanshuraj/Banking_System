@@ -22,6 +22,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+/** Spring Security setup: JWT authentication, role rules for each URL, CORS and the BCrypt password encoder. */
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -31,6 +32,7 @@ public class SecurityConfig {
     @Value("${bank.cors.allowed-origins}")
     private String allowedOrigins;
 
+    /** Stateless JWT security: login and sign-up are public, /api/admin/** needs ROLE_ADMIN, the rest of /api needs a login. */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -61,6 +63,7 @@ public class SecurityConfig {
         response.getWriter().write("{\"status\":" + status + ",\"message\":\"" + message + "\"}");
     }
 
+    /** Lets the React frontend's origin call the API. */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
@@ -81,6 +84,7 @@ public class SecurityConfig {
         return registration;
     }
 
+    /** BCrypt, used for both passwords and transaction PINs. */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

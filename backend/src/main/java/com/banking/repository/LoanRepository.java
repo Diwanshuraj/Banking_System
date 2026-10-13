@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+/** Spring Data JPA repository for {@link com.banking.model.Loan}. */
 public interface LoanRepository extends JpaRepository<Loan, Long> {
 
     List<Loan> findByUserIdOrderByAppliedAtDesc(Long userId);

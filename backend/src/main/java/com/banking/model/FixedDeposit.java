@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/** A fixed deposit funded from one of the customer's accounts. */
 @Entity
 @Table(name = "fixed_deposits")
 @Getter

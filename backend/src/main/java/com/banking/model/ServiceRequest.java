@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+/** A customer service request, such as a cheque book or an address change, and its progress. */
 @Entity
 @Table(name = "service_requests")
 @Getter

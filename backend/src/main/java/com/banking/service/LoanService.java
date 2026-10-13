@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 
+/** Loan products, applications, EMI repayment and admin approval. */
 @Service
 @RequiredArgsConstructor
 public class LoanService {
@@ -42,15 +43,18 @@ public class LoanService {
     private final IdGenerator ids;
     private final DtoMapper mapper;
 
+    /** Interest rate and limits for a loan type. */
     public static LoanProduct product(Loan.LoanType type) {
         return PRODUCTS.stream().filter(p -> p.type() == type).findFirst().orElseThrow();
     }
 
+    /** The customer's loans. */
     @Transactional(readOnly = true)
     public List<LoanDto> list(Long userId) {
         return loanRepository.findByUserIdOrderByAppliedAtDesc(userId).stream().map(mapper::loan).toList();
     }
 
+    /** Records a loan application for branch approval. */
     @Transactional
     public LoanDto apply(Long userId, LoanApplicationRequest request) {
         User user = authService.loadUser(userId);
@@ -92,6 +96,7 @@ public class LoanService {
         return mapper.loan(loan);
     }
 
+    /** Pays an EMI or prepays part of the loan. */
     @Transactional
     public LoanDto repay(Long userId, Long loanId, LoanRepayRequest request) {
         settings.requireNotInMaintenance();
@@ -140,6 +145,7 @@ public class LoanService {
 
     // ---------- Admin ----------
 
+    /** Loans in the given status, for the admin approval queue. */
     @Transactional(readOnly = true)
     public List<LoanDto> adminList(Loan.LoanStatus status) {
         List<Loan> loans = status == null ? loanRepository.findAllByOrderByAppliedAtDesc() : loanRepository.findByStatusOrderByAppliedAtDesc(status);

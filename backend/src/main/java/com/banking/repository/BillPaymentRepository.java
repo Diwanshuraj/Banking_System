@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
+/** Spring Data JPA repository for {@link com.banking.model.BillPayment}. */
 public interface BillPaymentRepository extends JpaRepository<BillPayment, Long> {
 
     List<BillPayment> findByUserIdOrderByCreatedAtDesc(Long userId);

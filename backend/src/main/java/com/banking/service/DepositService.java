@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+/** Fixed deposits: rate slabs, opening, premature closure and the nightly maturity job. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -43,6 +44,7 @@ public class DepositService {
     private final IdGenerator ids;
     private final DtoMapper mapper;
 
+    /** Annual interest rate for a tenure, including the senior-citizen bonus. */
     public static BigDecimal rateFor(int months, boolean senior) {
         FdRate slab = RATES.stream()
                 .filter(r -> months >= r.minMonths() && months <= r.maxMonths())
@@ -51,11 +53,13 @@ public class DepositService {
         return senior ? slab.seniorRate() : slab.rate();
     }
 
+    /** The customer's fixed deposits. */
     @Transactional(readOnly = true)
     public List<FixedDepositDto> list(Long userId) {
         return fdRepository.findByUserIdOrderByStartDateDesc(userId).stream().map(mapper::fixedDeposit).toList();
     }
 
+    /** Opens a fixed deposit funded from one of the customer's accounts. */
     @Transactional
     public FixedDepositDto open(Long userId, OpenFdRequest request) {
         settings.requireNotInMaintenance();
@@ -93,6 +97,7 @@ public class DepositService {
         return mapper.fixedDeposit(fd);
     }
 
+    /** Closes a deposit before maturity and pays out the value after the premature-closure penalty. */
     @Transactional
     public FixedDepositDto closeEarly(Long userId, Long fdId, String pin) {
         settings.requireNotInMaintenance();

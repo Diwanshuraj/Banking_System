@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+/** An in-app notification shown to one user. */
 @Entity
 @Table(name = "notifications", indexes = @Index(name = "idx_notification_user", columnList = "user_id, created_at"))
 @Getter

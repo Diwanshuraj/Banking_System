@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 
+/** The debit card linked to an account, with its channel switches and daily limits. */
 @Entity
 @Table(name = "debit_cards")
 @Getter

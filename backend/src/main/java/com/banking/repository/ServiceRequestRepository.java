@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Collection;
 import java.util.List;
 
+/** Spring Data JPA repository for {@link com.banking.model.ServiceRequest}. */
 public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, Long> {
 
     List<ServiceRequest> findByUserIdOrderByCreatedAtDesc(Long userId);

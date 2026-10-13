@@ -8,6 +8,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/** A bill payment or recharge paid from one of the customer's accounts. */
 @Entity
 @Table(name = "bill_payments")
 @Getter

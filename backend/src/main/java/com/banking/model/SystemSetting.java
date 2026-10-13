@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/** One bank-wide setting (a limit, rate or flag) stored as a key/value pair. */
 @Entity
 @Table(name = "system_settings")
 @Getter

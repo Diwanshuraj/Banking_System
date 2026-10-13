@@ -8,6 +8,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/** A customer's bank account (Savings, Current or Salary) with its balance, status and UPI handle. */
 @Entity
 @Table(name = "accounts")
 @Getter

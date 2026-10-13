@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import static com.banking.service.SettingsService.Key;
 
+/** Fund transfers and saved payees. A transfer checks the PIN and limits, locks the accounts and posts the ledger entries, all in one database transaction. */
 @Service
 @RequiredArgsConstructor
 public class TransferService {
@@ -40,6 +41,7 @@ public class TransferService {
     private final IdGenerator ids;
     private final DtoMapper mapper;
 
+    /** Today's transfer limits and how much of each has been used. */
     @Transactional(readOnly = true)
     public TransferLimits limits(Long userId) {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
@@ -54,6 +56,7 @@ public class TransferService {
                 settings.amount(Key.NEW_PAYEE_LIMIT));
     }
 
+    /** Resolves a UPI ID to the account holder's name so the customer can confirm the payee. */
     @Transactional(readOnly = true)
     public UpiLookup lookupUpi(String upiId) {
         Account account = resolveUpi(upiId);
@@ -79,6 +82,7 @@ public class TransferService {
     private record Destination(Account internalAccount, String name, String accountLabel, Beneficiary payee, boolean self) {
     }
 
+    /** Sends money: checks the PIN and limits, locks the accounts in id order and posts the ledger entries. */
     @Transactional
     public TransferReceipt transfer(Long userId, TransferRequest request) {
         settings.requireNotInMaintenance();
@@ -226,6 +230,7 @@ public class TransferService {
 
     // ---------- Payees ----------
 
+    /** The customer's saved payees. */
     @Transactional(readOnly = true)
     public List<BeneficiaryDto> payees(Long userId) {
         return beneficiaryRepository.findByUserIdOrderByNameAsc(userId).stream()
@@ -233,6 +238,7 @@ public class TransferService {
                 .toList();
     }
 
+    /** Saves a new payee; transfers to it are capped during its first 24 hours. */
     @Transactional
     public BeneficiaryDto addPayee(Long userId, BeneficiaryRequest request) {
         User user = authService.loadUser(userId);
@@ -266,6 +272,7 @@ public class TransferService {
         return mapper.beneficiary(payee, internalAccountFor(payee).isPresent());
     }
 
+    /** Deletes one of the customer's saved payees. */
     @Transactional
     public void removePayee(Long userId, Long payeeId) {
         Beneficiary payee = beneficiaryRepository.findByIdAndUserId(payeeId, userId)
