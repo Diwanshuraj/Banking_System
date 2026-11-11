@@ -107,7 +107,7 @@ Banking_System/
 ### 1. Get the code
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Diwanshuraj/Banking_System.git
 cd Banking_System
 ```
 
@@ -142,7 +142,18 @@ npm install
 
 ## Running the project
 
-### Backend (port 8080)
+### Quick 1-Click Launch (Windows)
+
+Simply double-click [`start-banking-system.bat`](start-banking-system.bat) in the project root. It will:
+1. Boot the backend on port 8080 with the in-memory H2 database.
+2. Boot the React dev server on port 5173.
+3. Automatically launch both portals in your default web browser.
+
+---
+
+### Manual Launch
+
+#### Backend (port 8080)
 
 From the `backend` folder:
 
@@ -150,8 +161,8 @@ From the `backend` folder:
 # Demo database (H2), macOS / Linux
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 
-# Demo database (H2), Windows
-mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=dev
+# Demo database (H2), Windows PowerShell
+mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"
 
 # MySQL instead: leave out the profile
 ./mvnw spring-boot:run
