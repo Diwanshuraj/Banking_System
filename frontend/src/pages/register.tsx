@@ -1,9 +1,9 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { AlertCircle, ArrowLeft, Briefcase01, Check, CheckCircle, Wallet02, Coins01 } from "@untitledui/icons";
+import { AlertCircle, ArrowLeft, ArrowRight, Briefcase01, Check, Coins01, Wallet02 } from "@untitledui/icons";
 import { Radio as AriaRadio, RadioGroup as AriaRadioGroup } from "react-aria-components";
-import { Link as RouterLink, Navigate, useNavigate } from "react-router";
-import { AuthShell } from "@/components/app/auth-shell";
+import { Navigate, useNavigate } from "react-router";
+import { AuthLayout, GlassCard, PanelHeading, SecureBadge } from "@/components/app/auth-shell";
 import { BANK_NAME } from "@/components/app/bank-logo";
 import { LoadingState } from "@/components/app/data-states";
 import { Button } from "@/components/base/buttons/button";
@@ -26,6 +26,12 @@ const STEPS = [
     { title: "Account & password", description: "Choose account and secure it" },
 ];
 
+const STEP_INTRO = [
+    "Tell us who you are. Use your name exactly as it appears on your PAN card.",
+    "We verify your identity with e-KYC. Your Aadhaar is stored masked.",
+    "Pick the account that suits you and create a strong login password.",
+];
+
 const STEP_FIELDS: (keyof FormState)[][] = [
     ["fullName", "email", "phone"],
     ["panNumber", "aadhaarNumber", "dateOfBirth", "address"],
@@ -33,9 +39,9 @@ const STEP_FIELDS: (keyof FormState)[][] = [
 ];
 
 const ACCOUNT_TYPES: { value: AccountType; title: string; description: string; icon: typeof Wallet02 }[] = [
-    { value: "SAVINGS", title: "Savings account", description: "Earn interest on your balance. Ideal for individuals.", icon: Wallet02 },
-    { value: "SALARY", title: "Salary account", description: "Zero-balance account for salaried employees.", icon: Coins01 },
-    { value: "CURRENT", title: "Current account", description: "For businesses and frequent high-value transactions.", icon: Briefcase01 },
+    { value: "SAVINGS", title: "Savings", description: "Earns interest", icon: Wallet02 },
+    { value: "SALARY", title: "Salary", description: "Zero balance", icon: Coins01 },
+    { value: "CURRENT", title: "Current", description: "For business", icon: Briefcase01 },
 ];
 
 const PASSWORD_RULES = [
@@ -103,34 +109,55 @@ const initialForm: FormState = {
     accountType: "SAVINGS",
 };
 
-const Stepper = ({ step }: { step: number }) => (
-    <ol className="flex items-start gap-2">
-        {STEPS.map((item, index) => {
-            const isDone = index < step;
-            const isCurrent = index === step;
-            return (
-                <li key={item.title} className="flex flex-1 flex-col gap-2">
-                    <div className={cx("h-1 rounded-full", isDone || isCurrent ? "bg-brand-solid" : "bg-quaternary")} />
-                    <div className="flex items-start gap-2">
-                        <span
-                            className={cx(
-                                "mt-px flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                                isDone && "bg-brand-solid text-white",
-                                isCurrent && "bg-brand-secondary text-brand-secondary ring-1 ring-brand ring-inset",
-                                !isDone && !isCurrent && "bg-secondary text-quaternary",
-                            )}
-                        >
-                            {isDone ? <Check className="size-3" /> : index + 1}
-                        </span>
-                        <div className="flex min-w-0 flex-col">
-                            <span className={cx("text-sm font-semibold", isCurrent ? "text-brand-secondary" : "text-secondary")}>{item.title}</span>
-                            <span className="hidden text-xs text-tertiary sm:block">{item.description}</span>
-                        </div>
-                    </div>
-                </li>
-            );
-        })}
-    </ol>
+/** Brand-panel content: vertical progress through the three steps. */
+const RegisterPanel = ({ step }: { step: number }) => (
+    <div className="flex flex-col gap-10">
+        <PanelHeading
+            eyebrow="Open an account"
+            title="Paperless account opening in 3 simple steps."
+            description="Keep your PAN, Aadhaar and Aadhaar-linked mobile number handy."
+        />
+
+        <GlassCard>
+            <ol className="flex flex-col">
+                {STEPS.map((item, index) => {
+                    const isDone = index < step;
+                    const isCurrent = index === step;
+                    const isLast = index === STEPS.length - 1;
+                    return (
+                        <li key={item.title} aria-current={isCurrent ? "step" : undefined} className="flex gap-4">
+                            <div className="flex flex-col items-center">
+                                <span
+                                    className={cx(
+                                        "flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition duration-200",
+                                        isDone && "bg-brand-400 text-brand-950",
+                                        isCurrent && "bg-white text-brand-900 ring-4 ring-white/15",
+                                        !isDone && !isCurrent && "text-white/50 ring-1 ring-white/20 ring-inset",
+                                    )}
+                                >
+                                    {isDone ? <Check className="size-4" /> : index + 1}
+                                </span>
+                                {!isLast && <span className={cx("my-1 w-px flex-1", isDone ? "bg-brand-400" : "bg-white/15")} />}
+                            </div>
+                            <div className={cx("flex flex-col pt-1", !isLast && "pb-6")}>
+                                <span className={cx("text-sm font-semibold", isDone || isCurrent ? "text-white" : "text-white/55")}>{item.title}</span>
+                                <span className="text-sm text-white/50">{item.description}</span>
+                            </div>
+                        </li>
+                    );
+                })}
+            </ol>
+        </GlassCard>
+    </div>
+);
+
+/** Compact progress bar for small screens, where the brand panel is hidden. */
+const MobileStepper = ({ step }: { step: number }) => (
+    <div className="flex gap-1.5 lg:hidden">
+        {STEPS.map((item, index) => (
+            <span key={item.title} className={cx("h-1.5 flex-1 rounded-full", index <= step ? "bg-brand-solid" : "bg-quaternary")} />
+        ))}
+    </div>
 );
 
 export const RegisterPage = () => {
@@ -189,7 +216,10 @@ export const RegisterPage = () => {
                 address: form.address.trim(),
                 accountType: form.accountType,
             });
-            toast.success(`Welcome to ${BANK_NAME}, ${created.fullName.split(" ")[0]}!`, `Your Customer ID is ${created.customerId}. Set a transaction PIN under Profile & security before making payments.`);
+            toast.success(
+                `Welcome to ${BANK_NAME}, ${created.fullName.split(" ")[0]}!`,
+                `Your Customer ID is ${created.customerId}. Set a transaction PIN under Profile & security before making payments.`,
+            );
             navigate("/", { replace: true });
         } catch (err) {
             setIsSubmitting(false);
@@ -212,237 +242,241 @@ export const RegisterPage = () => {
     });
 
     return (
-        <AuthShell action={{ prompt: "Already bank with us?", label: "Log in", to: "/login" }}>
-            <div className="mx-auto flex max-w-3xl flex-col gap-8">
+        <AuthLayout panel={<RegisterPanel step={step} />} width="lg" action={{ prompt: "Already bank with us?", label: "Log in", to: "/login" }}>
+            <form onSubmit={next} noValidate className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2">
-                    <h1 className="text-display-xs font-semibold text-primary">Open a savings account online</h1>
-                    <p className="text-md text-tertiary">Paperless account opening in 3 steps. Keep your PAN and Aadhaar handy.</p>
+                    <MobileStepper step={step} />
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <span className="text-sm font-semibold text-brand-secondary">
+                            Step {step + 1} of {STEPS.length}
+                        </span>
+                        <SecureBadge>Encrypted &amp; secure</SecureBadge>
+                    </div>
+                    <h1 className="text-display-xs font-semibold tracking-tight text-primary">{STEPS[step].title}</h1>
+                    <p className="text-md text-tertiary">{STEP_INTRO[step]}</p>
                 </div>
 
-                <Stepper step={step} />
+                <div className="flex flex-col gap-4">
+                    {formError && (
+                        <div role="alert" className="flex gap-3 rounded-lg bg-error-primary p-3 text-sm text-error-primary ring-1 ring-error_subtle ring-inset">
+                            <AlertCircle className="size-5 shrink-0" />
+                            <span>{formError}</span>
+                        </div>
+                    )}
 
-                <form onSubmit={next} noValidate className="flex flex-col rounded-xl bg-primary shadow-xs ring-1 ring-secondary">
-                    <div className="flex flex-col gap-1 border-b border-secondary px-4 py-5 md:px-6">
-                        <h2 className="text-lg font-semibold text-primary">{STEPS[step].title}</h2>
-                        <p className="text-sm text-tertiary">
-                            Step {step + 1} of {STEPS.length} · {STEPS[step].description}
-                        </p>
-                    </div>
-
-                    <div className="flex flex-col gap-5 px-4 py-6 md:px-6">
-                        {formError && (
-                            <div role="alert" className="flex gap-3 rounded-lg bg-error-primary p-3 text-sm text-error-primary ring-1 ring-error_subtle ring-inset">
-                                <AlertCircle className="size-5 shrink-0" />
-                                <span>{formError}</span>
-                            </div>
-                        )}
-
-                        {step === 0 && (
-                            <>
+                    {step === 0 && (
+                        <>
+                            <Input
+                                label="Full name (as per PAN)"
+                                placeholder="Priya Verma"
+                                autoComplete="name"
+                                isRequired
+                                autoFocus
+                                {...field("fullName")}
+                                onChange={(value) => update("fullName", value)}
+                                hint={errors.fullName}
+                            />
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <Input
-                                    label="Full name (as per PAN)"
-                                    placeholder="Priya Verma"
-                                    autoComplete="name"
+                                    label="Email address"
+                                    type="email"
+                                    placeholder="you@example.com"
+                                    autoComplete="email"
+                                    isRequired
+                                    {...field("email")}
+                                    onChange={(value) => update("email", value)}
+                                    hint={errors.email ?? "You can log in with this email."}
+                                />
+                                <Input
+                                    label="Mobile number"
+                                    type="tel"
+                                    inputMode="numeric"
+                                    placeholder="98765 43210"
+                                    autoComplete="tel-national"
+                                    isRequired
+                                    maxLength={10}
+                                    {...field("phone")}
+                                    onChange={(value) => update("phone", value.replace(/\D/g, "").slice(0, 10))}
+                                    hint={errors.phone ?? "Linked to your Aadhaar, for SMS alerts."}
+                                />
+                            </div>
+                        </>
+                    )}
+
+                    {step === 1 && (
+                        <>
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <Input
+                                    label="PAN"
+                                    placeholder="ABCDE1234F"
                                     isRequired
                                     autoFocus
-                                    {...field("fullName")}
-                                    onChange={(value) => update("fullName", value)}
-                                    hint={errors.fullName}
+                                    maxLength={10}
+                                    inputClassName="uppercase tracking-wider"
+                                    {...field("panNumber")}
+                                    onChange={(value) =>
+                                        update(
+                                            "panNumber",
+                                            value
+                                                .toUpperCase()
+                                                .replace(/[^A-Z0-9]/g, "")
+                                                .slice(0, 10),
+                                        )
+                                    }
+                                    hint={errors.panNumber ?? "10-character Permanent Account Number."}
                                 />
-                                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                                    <Input
-                                        label="Email address"
-                                        type="email"
-                                        placeholder="you@example.com"
-                                        autoComplete="email"
-                                        isRequired
-                                        {...field("email")}
-                                        onChange={(value) => update("email", value)}
-                                        hint={errors.email ?? "You can log in with this email."}
-                                    />
-                                    <Input
-                                        label="Mobile number"
-                                        type="tel"
-                                        inputMode="numeric"
-                                        placeholder="98765 43210"
-                                        autoComplete="tel-national"
-                                        isRequired
-                                        maxLength={10}
-                                        {...field("phone")}
-                                        onChange={(value) => update("phone", value.replace(/\D/g, "").slice(0, 10))}
-                                        hint={errors.phone ?? "Linked to your Aadhaar, for SMS alerts."}
-                                    />
-                                </div>
-                            </>
-                        )}
-
-                        {step === 1 && (
-                            <>
-                                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                                    <Input
-                                        label="PAN"
-                                        placeholder="ABCDE1234F"
-                                        isRequired
-                                        autoFocus
-                                        maxLength={10}
-                                        inputClassName="uppercase tracking-wider"
-                                        {...field("panNumber")}
-                                        onChange={(value) => update("panNumber", value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10))}
-                                        hint={errors.panNumber ?? "10-character Permanent Account Number."}
-                                    />
-                                    <Input
-                                        label="Aadhaar number"
-                                        inputMode="numeric"
-                                        placeholder="1234 5678 9012"
-                                        isRequired
-                                        maxLength={14}
-                                        inputClassName="tabular-nums tracking-wider"
-                                        {...field("aadhaarNumber")}
-                                        value={form.aadhaarNumber.replace(/(\d{4})(?=\d)/g, "$1 ")}
-                                        onChange={(value) => update("aadhaarNumber", value.replace(/\D/g, "").slice(0, 12))}
-                                        hint={errors.aadhaarNumber ?? "Stored masked — only the last 4 digits are shown."}
-                                    />
-                                </div>
                                 <Input
-                                    label="Date of birth"
-                                    type="date"
+                                    label="Aadhaar number"
+                                    inputMode="numeric"
+                                    placeholder="1234 5678 9012"
                                     isRequired
-                                    className="md:max-w-xs"
-                                    {...field("dateOfBirth")}
-                                    onChange={(value) => update("dateOfBirth", value)}
-                                    hint={errors.dateOfBirth ?? "You must be 18 or older."}
+                                    maxLength={14}
+                                    inputClassName="tabular-nums tracking-wider"
+                                    {...field("aadhaarNumber")}
+                                    value={form.aadhaarNumber.replace(/(\d{4})(?=\d)/g, "$1 ")}
+                                    onChange={(value) => update("aadhaarNumber", value.replace(/\D/g, "").slice(0, 12))}
+                                    hint={errors.aadhaarNumber ?? "Stored masked for your safety."}
                                 />
-                                <TextArea
-                                    label="Residential address"
-                                    placeholder="Flat / house no., street, city, state, PIN code"
+                            </div>
+                            <Input
+                                label="Date of birth"
+                                type="date"
+                                isRequired
+                                className="md:max-w-[calc(50%-0.5rem)]"
+                                {...field("dateOfBirth")}
+                                onChange={(value) => update("dateOfBirth", value)}
+                                hint={errors.dateOfBirth ?? "You must be 18 or older."}
+                            />
+                            <TextArea
+                                label="Residential address"
+                                placeholder="Flat / house no., street, city, state, PIN code"
+                                isRequired
+                                rows={2}
+                                value={form.address}
+                                isInvalid={Boolean(errors.address)}
+                                onChange={(value) => update("address", value)}
+                                hint={errors.address ?? "As per your Aadhaar."}
+                            />
+                        </>
+                    )}
+
+                    {step === 2 && (
+                        <>
+                            <AriaRadioGroup
+                                aria-label="Account type"
+                                value={form.accountType}
+                                onChange={(value) => update("accountType", value as AccountType)}
+                                className="flex flex-col gap-1.5"
+                            >
+                                <span className="text-sm font-medium text-secondary">Account type</span>
+                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                    {ACCOUNT_TYPES.map(({ value, title, description, icon: Icon }) => (
+                                        <AriaRadio
+                                            key={value}
+                                            value={value}
+                                            className={({ isSelected, isFocusVisible }) =>
+                                                cx(
+                                                    "flex cursor-pointer items-center gap-3 rounded-xl bg-primary p-3 ring-1 ring-secondary transition duration-100 ease-linear ring-inset",
+                                                    isSelected && "bg-brand-primary_alt ring-2 ring-brand",
+                                                    isFocusVisible && "outline-2 outline-offset-2 outline-focus-ring",
+                                                )
+                                            }
+                                        >
+                                            {({ isSelected }) => (
+                                                <>
+                                                    <span
+                                                        className={cx(
+                                                            "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                                                            isSelected ? "bg-brand-solid text-white" : "bg-secondary text-fg-secondary",
+                                                        )}
+                                                    >
+                                                        <Icon className="size-4" />
+                                                    </span>
+                                                    <span className="flex min-w-0 flex-col">
+                                                        <span className="text-sm font-semibold text-primary">{title}</span>
+                                                        <span className="truncate text-xs text-tertiary">{description}</span>
+                                                    </span>
+                                                </>
+                                            )}
+                                        </AriaRadio>
+                                    ))}
+                                </div>
+                            </AriaRadioGroup>
+
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <Input
+                                    label="Create login password"
+                                    type="password"
+                                    autoComplete="new-password"
                                     isRequired
-                                    rows={3}
-                                    value={form.address}
-                                    isInvalid={Boolean(errors.address)}
-                                    onChange={(value) => update("address", value)}
-                                    hint={errors.address ?? "As per your Aadhaar."}
+                                    {...field("password")}
+                                    onChange={(value) => update("password", value)}
+                                    hint={errors.password}
                                 />
-                            </>
-                        )}
+                                <Input
+                                    label="Confirm password"
+                                    type="password"
+                                    autoComplete="new-password"
+                                    isRequired
+                                    {...field("confirmPassword")}
+                                    onChange={(value) => update("confirmPassword", value)}
+                                    hint={errors.confirmPassword}
+                                />
+                            </div>
 
-                        {step === 2 && (
-                            <>
-                                <AriaRadioGroup
-                                    aria-label="Account type"
-                                    value={form.accountType}
-                                    onChange={(value) => update("accountType", value as AccountType)}
-                                    className="flex flex-col gap-3"
-                                >
-                                    <span className="text-sm font-medium text-secondary">Account type</span>
-                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                                        {ACCOUNT_TYPES.map(({ value, title, description, icon: Icon }) => (
-                                            <AriaRadio
-                                                key={value}
-                                                value={value}
-                                                className={({ isSelected, isFocusVisible }) =>
-                                                    cx(
-                                                        "relative flex cursor-pointer flex-col gap-3 rounded-xl bg-primary p-4 ring-1 ring-secondary transition duration-100 ease-linear ring-inset",
-                                                        isSelected && "bg-brand-primary_alt ring-2 ring-brand",
-                                                        isFocusVisible && "outline-2 outline-offset-2 outline-focus-ring",
-                                                    )
-                                                }
-                                            >
-                                                {({ isSelected }) => (
-                                                    <>
-                                                        <div className="flex items-center justify-between">
-                                                            <span className="flex size-9 items-center justify-center rounded-lg bg-secondary ring-1 ring-secondary ring-inset">
-                                                                <Icon className="size-5 text-fg-secondary" />
-                                                            </span>
-                                                            {isSelected && <CheckCircle className="size-5 text-fg-brand-primary" />}
-                                                        </div>
-                                                        <div className="flex flex-col gap-0.5">
-                                                            <span className="text-sm font-semibold text-primary">{title}</span>
-                                                            <span className="text-sm text-tertiary">{description}</span>
-                                                        </div>
-                                                    </>
-                                                )}
-                                            </AriaRadio>
-                                        ))}
-                                    </div>
-                                </AriaRadioGroup>
+                            <ul className="-mt-1 flex flex-wrap gap-1.5" aria-label="Password rules">
+                                {PASSWORD_RULES.map((rule) => {
+                                    const passed = rule.test(form.password);
+                                    return (
+                                        <li
+                                            key={rule.label}
+                                            className={cx(
+                                                "flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium transition duration-100 ease-linear",
+                                                passed ? "bg-success-primary text-success-primary" : "bg-secondary text-tertiary",
+                                            )}
+                                        >
+                                            <Check className={cx("size-3", !passed && "opacity-40")} aria-hidden="true" />
+                                            {rule.label}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
 
-                                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                                    <Input
-                                        label="Create login password"
-                                        type="password"
-                                        autoComplete="new-password"
-                                        isRequired
-                                        {...field("password")}
-                                        onChange={(value) => update("password", value)}
-                                        hint={errors.password}
-                                    />
-                                    <Input
-                                        label="Confirm password"
-                                        type="password"
-                                        autoComplete="new-password"
-                                        isRequired
-                                        {...field("confirmPassword")}
-                                        onChange={(value) => update("confirmPassword", value)}
-                                        hint={errors.confirmPassword}
-                                    />
-                                </div>
+                            <div className="flex flex-col gap-1.5">
+                                <Checkbox
+                                    isSelected={acceptedTerms}
+                                    onChange={(value) => {
+                                        setAcceptedTerms(value);
+                                        setErrors((current) => ({ ...current, terms: undefined }));
+                                    }}
+                                    label="I confirm the details above are correct"
+                                    hint="I agree to the account terms and consent to Aadhaar e-KYC."
+                                />
+                                {errors.terms && <p className="text-sm text-error-primary">{errors.terms}</p>}
+                            </div>
+                        </>
+                    )}
+                </div>
 
-                                <ul className="grid grid-cols-1 gap-2 rounded-lg bg-secondary p-4 sm:grid-cols-2">
-                                    {PASSWORD_RULES.map((rule) => {
-                                        const passed = rule.test(form.password);
-                                        return (
-                                            <li key={rule.label} className={cx("flex items-center gap-2 text-sm", passed ? "text-success-primary" : "text-tertiary")}>
-                                                <span
-                                                    className={cx(
-                                                        "flex size-4 shrink-0 items-center justify-center rounded-full",
-                                                        passed ? "bg-success-solid text-white" : "bg-quaternary text-quaternary",
-                                                    )}
-                                                >
-                                                    <Check className="size-3" />
-                                                </span>
-                                                {rule.label}
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-
-                                <div className="flex flex-col gap-1.5">
-                                    <Checkbox
-                                        isSelected={acceptedTerms}
-                                        onChange={(value) => {
-                                            setAcceptedTerms(value);
-                                            setErrors((current) => ({ ...current, terms: undefined }));
-                                        }}
-                                        label="I confirm the details above are correct"
-                                        hint="I agree to the account terms, and consent to Aadhaar-based e-KYC verification."
-                                    />
-                                    {errors.terms && <p className="text-sm text-error-primary">{errors.terms}</p>}
-                                </div>
-                            </>
-                        )}
-                    </div>
-
-                    <div className="flex flex-col-reverse gap-3 border-t border-secondary px-4 py-4 sm:flex-row sm:justify-between md:px-6">
-                        {step > 0 ? (
-                            <Button color="secondary" size="lg" iconLeading={ArrowLeft} onClick={() => setStep(step - 1)} isDisabled={isSubmitting}>
-                                Back
-                            </Button>
-                        ) : (
-                            <span />
-                        )}
-                        <Button type="submit" size="lg" isLoading={isSubmitting} showTextWhileLoading>
-                            {step < STEPS.length - 1 ? "Continue" : "Open my account"}
+                <div className="flex flex-col-reverse gap-3 border-t border-secondary pt-5 sm:flex-row sm:justify-between">
+                    {step > 0 ? (
+                        <Button color="secondary" size="lg" iconLeading={ArrowLeft} onClick={() => setStep(step - 1)} isDisabled={isSubmitting}>
+                            Back
                         </Button>
-                    </div>
-                </form>
-
-                <p className="text-center text-sm text-tertiary">
-                    Already bank with us?{" "}
-                    <RouterLink to="/login" className="font-semibold text-brand-secondary hover:text-brand-secondary_hover">
-                        Log in to internet banking
-                    </RouterLink>
-                </p>
-            </div>
-        </AuthShell>
+                    ) : (
+                        <span />
+                    )}
+                    <Button
+                        type="submit"
+                        size="lg"
+                        iconTrailing={step < STEPS.length - 1 ? ArrowRight : undefined}
+                        isLoading={isSubmitting}
+                        showTextWhileLoading
+                    >
+                        {step < STEPS.length - 1 ? "Continue" : "Open my account"}
+                    </Button>
+                </div>
+            </form>
+        </AuthLayout>
     );
 };

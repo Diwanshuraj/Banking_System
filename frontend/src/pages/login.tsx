@@ -1,8 +1,8 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { AlertCircle, Lock01, ShieldTick, User01 } from "@untitledui/icons";
-import { Link as RouterLink, Navigate, useLocation, useNavigate } from "react-router";
-import { AuthFooter, AuthWordmark } from "@/components/app/auth-shell";
+import { AlertCircle, ArrowDownLeft, ArrowRight, ArrowUpRight, CheckCircle, Lightning01, Lock01, User01 } from "@untitledui/icons";
+import { Navigate, useLocation, useNavigate } from "react-router";
+import { AuthLayout, GlassCard, PanelHeading, SecureBadge } from "@/components/app/auth-shell";
 import { LoadingState } from "@/components/app/data-states";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
@@ -11,19 +11,72 @@ import { ApiError } from "@/lib/api";
 import type { User } from "@/lib/types";
 import { useAuth } from "@/providers/auth-provider";
 import { useToast } from "@/providers/toast-provider";
-
-const DEMO_LOGINS = [
-    { label: "Customer", username: "priya.v@example.com", password: "Customer@123", note: "PIN 123456" },
-    { label: "Administrator", username: "admin@bank.com", password: "Admin@123", note: "Branch console" },
-];
-
-const HIGHLIGHTS = [
-    { value: "24×7", label: "Access to your accounts" },
-    { value: "₹5 lakh", label: "DICGC deposit insurance" },
-    { value: "6-digit", label: "PIN on every payment" },
-];
+import { cx } from "@/utils/cx";
 
 const homeFor = (user: User, from?: string) => (user.role === "ROLE_ADMIN" ? "/admin" : from && from !== "/login" ? from : "/");
+
+const PREVIEW_ACTIVITY = [
+    { icon: ArrowDownLeft, label: "Salary credited", meta: "Today, 9:12 am", amount: "+ ₹85,000", credit: true },
+    { icon: Lightning01, label: "Electricity bill", meta: "Yesterday", amount: "− ₹2,340", credit: false },
+    { icon: ArrowUpRight, label: "Sent to Amit Patel", meta: "18 Nov", amount: "− ₹5,000", credit: false },
+];
+
+/** Bar heights for the decorative balance trend. */
+const TREND = [38, 52, 44, 60, 56, 72, 64, 80, 74, 92];
+
+/** Decorative preview of the dashboard: balance, trend and recent activity. */
+const AccountPreview = () => (
+    <div aria-hidden="true" className="relative">
+        <GlassCard className="flex flex-col gap-5">
+            <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-1">
+                    <span className="text-xs font-medium text-white/55">Savings account ·· 2527</span>
+                    <span className="text-display-xs font-semibold tracking-tight text-white">₹4,82,150.75</span>
+                </div>
+                <div className="flex h-10 items-end gap-1">
+                    {TREND.map((height, index) => (
+                        <span
+                            key={index}
+                            style={{ height: `${height}%` }}
+                            className={cx("w-1.5 rounded-full", index === TREND.length - 1 ? "bg-brand-300" : "bg-white/20")}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            <ul className="flex flex-col divide-y divide-white/10 border-t border-white/10">
+                {PREVIEW_ACTIVITY.map(({ icon: Icon, label, meta, amount, credit }) => (
+                    <li key={label} className="flex items-center gap-3 py-3 last:pb-0">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10">
+                            <Icon className={cx("size-4", credit ? "text-green-400" : "text-white/70")} />
+                        </span>
+                        <span className="flex min-w-0 flex-1 flex-col">
+                            <span className="truncate text-sm font-medium text-white">{label}</span>
+                            <span className="text-xs text-white/50">{meta}</span>
+                        </span>
+                        <span className={cx("text-sm font-semibold tabular-nums", credit ? "text-green-400" : "text-white/80")}>{amount}</span>
+                    </li>
+                ))}
+            </ul>
+        </GlassCard>
+
+        <div className="absolute -top-4 -right-4 flex items-center gap-2 rounded-full bg-white py-1.5 pr-3.5 pl-2 shadow-lg">
+            <CheckCircle className="size-5 text-green-600" />
+            <span className="text-xs font-semibold text-gray-900">Transfer successful</span>
+        </div>
+    </div>
+);
+
+const LoginPanel = () => (
+    <div className="flex flex-col gap-10">
+        <PanelHeading
+            eyebrow="Personal NetBanking"
+            title="Your bank, open whenever you need it."
+            description="Transfer funds, pay bills, open deposits and manage your cards from one secure place."
+        />
+        <AccountPreview />
+    </div>
+);
 
 export const LoginPage = () => {
     const { user, isRestoring, login } = useAuth();
@@ -69,143 +122,63 @@ export const LoginPage = () => {
         }
     };
 
-    const fillDemo = (demo: (typeof DEMO_LOGINS)[number]) => {
-        setUsername(demo.username);
-        setPassword(demo.password);
-        setFieldErrors({});
-        setFormError(undefined);
-    };
-
     return (
-        <div className="flex min-h-dvh bg-primary">
-            <aside className="relative hidden w-[52%] flex-col overflow-hidden bg-brand-950 lg:flex">
-                <svg aria-hidden="true" className="absolute inset-0 size-full opacity-[0.07]">
-                    <defs>
-                        <pattern id="login-grid" width="48" height="48" patternUnits="userSpaceOnUse">
-                            <path d="M48 0H0v48" fill="none" stroke="white" strokeWidth="1" />
-                        </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#login-grid)" />
-                </svg>
-                <div aria-hidden="true" className="absolute -right-32 -bottom-32 size-130 rounded-full bg-brand-600/25 blur-3xl" />
-
-                <div className="relative flex flex-1 flex-col justify-between px-12 py-10 xl:px-16">
-                    <AuthWordmark tone="light" />
-
-                    <div className="flex max-w-lg flex-col gap-10">
-                        <div className="flex flex-col gap-4">
-                            <p className="text-sm font-semibold tracking-wider text-brand-300 uppercase">Personal NetBanking</p>
-                            <h2 className="text-display-md font-semibold tracking-tight text-white">Your bank, open whenever you need it.</h2>
-                            <p className="text-lg text-white/70">Transfer funds, pay bills, open deposits and manage your cards from one secure place.</p>
-                        </div>
-
-                        <dl className="grid grid-cols-3 divide-x divide-white/15 border-y border-white/15 py-5">
-                            {HIGHLIGHTS.map((item) => (
-                                <div key={item.label} className="flex flex-col gap-1 px-5 first:pl-0">
-                                    <dt className="order-2 text-sm text-white/60">{item.label}</dt>
-                                    <dd className="order-1 text-xl font-semibold text-white">{item.value}</dd>
-                                </div>
-                            ))}
-                        </dl>
-                    </div>
-
-                    <div className="flex max-w-lg gap-3 rounded-xl bg-white/5 p-4 ring-1 ring-white/10 ring-inset">
-                        <ShieldTick className="mt-0.5 size-5 shrink-0 text-brand-300" aria-hidden="true" />
-                        <p className="text-sm text-white/70">
-                            <span className="font-semibold text-white">Bank staff will never ask for your password, OTP or PIN.</span> Report anything suspicious on the
-                            cyber-crime helpline 1930.
-                        </p>
-                    </div>
-                </div>
-            </aside>
-
-            <div className="flex flex-1 flex-col">
-                <div className="flex items-center justify-between gap-4 px-6 pt-6 md:px-10">
-                    <span className="lg:hidden">
-                        <AuthWordmark />
-                    </span>
-                    <p className="ml-auto text-sm text-tertiary">
-                        <span className="hidden sm:inline">New customer? </span>
-                        <RouterLink to="/register" className="font-semibold text-brand-secondary hover:text-brand-secondary_hover">
-                            Open an account
-                        </RouterLink>
-                    </p>
+        <AuthLayout panel={<LoginPanel />} action={{ prompt: "New customer?", label: "Open an account", to: "/register" }}>
+            <div className="flex flex-col gap-8">
+                <div className="flex flex-col gap-3">
+                    <SecureBadge />
+                    <h1 className="text-display-xs font-semibold tracking-tight text-primary">Welcome back</h1>
+                    <p className="text-md text-tertiary">Log in with your registered email address or 11-digit Customer ID.</p>
                 </div>
 
-                <main className="flex flex-1 items-center justify-center px-6 py-12 md:px-10">
-                    <div className="flex w-full max-w-100 flex-col gap-8">
-                        <div className="flex flex-col gap-2">
-                            <h1 className="text-display-xs font-semibold text-primary">Log in to NetBanking</h1>
-                            <p className="text-md text-tertiary">Enter your registered email address or 11-digit Customer ID.</p>
+                <form onSubmit={submit} noValidate className="flex flex-col gap-5">
+                    {formError && (
+                        <div role="alert" className="flex gap-3 rounded-lg bg-error-primary p-3 text-sm text-error-primary ring-1 ring-error_subtle ring-inset">
+                            <AlertCircle className="size-5 shrink-0" />
+                            <span>{formError}</span>
                         </div>
+                    )}
 
-                        <form onSubmit={submit} noValidate className="flex flex-col gap-5">
-                            {formError && (
-                                <div role="alert" className="flex gap-3 rounded-lg bg-error-primary p-3 text-sm text-error-primary ring-1 ring-error_subtle ring-inset">
-                                    <AlertCircle className="size-5 shrink-0" />
-                                    <span>{formError}</span>
-                                </div>
-                            )}
+                    <Input
+                        size="lg"
+                        label="Email or Customer ID"
+                        placeholder="you@example.com"
+                        icon={User01}
+                        autoComplete="username"
+                        value={username}
+                        onChange={(value) => {
+                            setUsername(value);
+                            setFieldErrors((current) => ({ ...current, username: undefined }));
+                        }}
+                        isInvalid={Boolean(fieldErrors.username)}
+                        hint={fieldErrors.username}
+                        isRequired
+                        hideRequiredIndicator
+                        autoFocus
+                    />
+                    <Input
+                        size="lg"
+                        label="Password"
+                        type="password"
+                        placeholder="Enter your password"
+                        icon={Lock01}
+                        autoComplete="current-password"
+                        value={password}
+                        onChange={(value) => {
+                            setPassword(value);
+                            setFieldErrors((current) => ({ ...current, password: undefined }));
+                        }}
+                        isInvalid={Boolean(fieldErrors.password)}
+                        hint={fieldErrors.password}
+                        isRequired
+                        hideRequiredIndicator
+                    />
 
-                            <Input
-                                label="Username"
-                                placeholder="Email or Customer ID"
-                                icon={User01}
-                                autoComplete="username"
-                                value={username}
-                                onChange={(value) => {
-                                    setUsername(value);
-                                    setFieldErrors((current) => ({ ...current, username: undefined }));
-                                }}
-                                isInvalid={Boolean(fieldErrors.username)}
-                                hint={fieldErrors.username}
-                                isRequired
-                                hideRequiredIndicator
-                                autoFocus
-                            />
-                            <Input
-                                label="Password"
-                                type="password"
-                                placeholder="Enter your password"
-                                icon={Lock01}
-                                autoComplete="current-password"
-                                value={password}
-                                onChange={(value) => {
-                                    setPassword(value);
-                                    setFieldErrors((current) => ({ ...current, password: undefined }));
-                                }}
-                                isInvalid={Boolean(fieldErrors.password)}
-                                hint={fieldErrors.password}
-                                isRequired
-                                hideRequiredIndicator
-                            />
-
-                            <Button type="submit" size="lg" className="mt-1" isLoading={isSubmitting} showTextWhileLoading>
-                                Log in
-                            </Button>
-                        </form>
-
-                        <div className="flex flex-col gap-3 border-t border-secondary pt-6">
-                            <p className="text-xs font-medium text-quaternary">Demo access — select to fill</p>
-                            <div className="grid grid-cols-2 gap-2">
-                                {DEMO_LOGINS.map((demo) => (
-                                    <button
-                                        key={demo.username}
-                                        type="button"
-                                        onClick={() => fillDemo(demo)}
-                                        className="flex cursor-pointer flex-col items-start gap-0.5 rounded-lg px-3 py-2.5 text-left ring-1 ring-secondary transition duration-100 ease-linear ring-inset outline-focus-ring hover:bg-primary_hover focus-visible:outline-2 focus-visible:outline-offset-2"
-                                    >
-                                        <span className="text-sm font-medium text-secondary">{demo.label}</span>
-                                        <span className="text-xs text-quaternary">{demo.note}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </main>
-
-                <AuthFooter className="px-6 pb-6 md:px-10" />
+                    <Button type="submit" size="xl" className="mt-2" iconTrailing={ArrowRight} isLoading={isSubmitting} showTextWhileLoading>
+                        Log in securely
+                    </Button>
+                </form>
             </div>
-        </div>
+        </AuthLayout>
     );
 };
